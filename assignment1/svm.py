@@ -11,7 +11,7 @@ plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
-cifar10_dir = 'cs231n/datasets/cifar-10-batches-py'
+cifar10_dir = 'assignment1/cs231n/datasets/cifar-10-batches-py'
 X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
 
 classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']

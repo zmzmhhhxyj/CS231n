@@ -29,18 +29,21 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  f = np.reshape(X[i].T@W,(X.shape[0],-1))
-  prob = np.zeros(f)
-  for i in range(X.shape[0]):
-    for j in range(X.shape[1]):
-      correct_class = np.max(f[i])
-      prob = np.exp(correct_class)/np.sum(np.exp(prob[i]),axis=1)
-      loss -= np.log(prob)
-      if(y[i]==j):
-        d[:,j] -= X[i].T@(p[:,j]-1)
-      else:
-        d[:,j] -= X[i].T@()
 
+  f = X@W
+  correct_class = np.reshape(np.max(f,axis=1),(X.shape[0],1))
+  prob = np.exp(f-correct_class)/np.sum(np.exp(f-correct_class),axis=1,keepdims=True)
+
+  for i in range(X.shape[0]):
+    loss -= np.log(prob[i,y[i]])
+    for j in range(W.shape[1]):
+      if(y[i]==j):
+        dW[:,j] += X[i,:].T*(prob[i,j]-1)
+      else:
+        dW[:,j] += X[i,:].T*prob[i,j]
+  loss /= X.shape[0]
+  loss+=0.5*reg*reg*np.sum(W*W)
+  dW = dW/X.shape[0] +reg*W
 
   #############################################################################
   #                          END OF YOUR CODE                                 #
@@ -67,10 +70,19 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  f = X@W
+  correct_class = np.reshape(np.max(f,axis=1),(X.shape[0],1))
+  prob = np.exp(f-correct_class)/np.sum(np.exp(f-correct_class),axis=1,keepdims=True)
+  loss = np.sum(-1*np.log(prob[range(X.shape[0]),y]))
+  prob[range(X.shape[0]),y] -=1
+  dW = X.T.dot(prob)
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
-
+  loss/=X.shape[0]
+  dW/=X.shape[0]
+  loss+=0.5*reg*reg*np.sum(W*W)
+  dW += reg*W
   return loss, dW
 
