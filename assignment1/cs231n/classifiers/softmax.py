@@ -76,7 +76,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   loss = np.sum(-1*np.log(prob[range(X.shape[0]),y]))
   prob[range(X.shape[0]),y] -=1
   dW = X.T.dot(prob)
-
+                                 
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
