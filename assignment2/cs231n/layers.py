@@ -25,9 +25,10 @@ def affine_forward(x, w, b):
     # TODO: Implement the affine forward pass. Store the result in out. You   #
     # will need to reshape the input into rows.                               #
     ###########################################################################
-    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)****
+    N,D = int(x.shape[0]),int(x.size/x.shape[0])
+    x_fc = np.reshape(x,(N,D))
+    out = x_fc@w+b
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -59,8 +60,10 @@ def affine_backward(dout, cache):
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    N,D = int(x.shape[0]),int(x.size/x.shape[0])
+    dx = (dout@w.T).reshape(x.shape)
+    dw = (np.reshape(x,(N,D)).T)@dout
+    db = np.sum(dout,axis = 0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -86,7 +89,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.maximum(0,x)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -113,7 +116,7 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dx = dout*(x>0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -776,15 +779,16 @@ def svm_loss(x, y):
     - dx: Gradient of the loss with respect to x
     """
     N = x.shape[0]
-    correct_class_scores = x[np.arange(N), y]
-    margins = np.maximum(0, x - correct_class_scores[:, np.newaxis] + 1.0)
-    margins[np.arange(N), y] = 0
-    loss = np.sum(margins) / N
-    num_pos = np.sum(margins > 0, axis=1)
+    correct_scores = x[np.arange(N),y]
+    margin = np.maximum(0,x-np.reshape(correct_scores,(N,1))+1)
+    margin[np.arange(N),y]=0
+    loss = np.sum(margin)/N
+    num_cor = np.sum(margin>0,axis=1)
     dx = np.zeros_like(x)
-    dx[margins > 0] = 1
-    dx[np.arange(N), y] -= num_pos
-    dx /= N
+    dx[margin>0] = 1
+    dx[np.arange(N),y] -= num_cor
+    dx/=N
+
     return loss, dx
 
 

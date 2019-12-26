@@ -48,7 +48,10 @@ class TwoLayerNet(object):
         # weights and biases using the keys 'W2' and 'b2'.                         #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        self.params["W1"] = np.random.randn(input_dim,hidden_dim)*weight_scale
+        self.params["b1"] = np.zeros(hidden_dim)
+        self.params["W2"] = np.random.randn(hidden_dim,num_classes)*weight_scale
+        self.params["b2"] = np.zeros(num_classes)
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -83,7 +86,10 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        w1,b1 = self.params["W1"],self.params["b1"]
+        w2,b2 = self.params["W2"],self.params["b2"]
+        relu_out, relu_cache = affine_relu_forward(X,w1,b1) 
+        affine_out,affine_cache = affine_forward(relu_out,w2,b2)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -92,7 +98,7 @@ class TwoLayerNet(object):
 
         # If y is None then we are in test mode so just return scores
         if y is None:
-            return scores
+            return affine_out
 
         loss, grads = 0, {}
         ############################################################################
@@ -107,8 +113,12 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        loss,dout = softmax_loss(affine_out,y)
+        loss += 0.5*self.reg*(np.sum(w1*w1)+np.sum(w2*w2))
+        d_hidden, grads["W2"],grads["b2"] = affine_backward(dout,(affine_cache))
+        dX,grads["W1"],grads["b1"] = affine_relu_backward(d_hidden,(relu_cache))
+        grads["W1"]+=self.reg*w1
+        grads["W2"]+=self.reg*w2
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
