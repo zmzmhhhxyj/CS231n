@@ -130,7 +130,7 @@ print('\nTesting softmax_loss:')
 print('loss: ', loss)
 print('dx error: ', rel_error(dx_num, dx)) """
 
-np.random.seed(231)
+""" np.random.seed(231)
 N, D, H, C = 3, 5, 50, 7
 X = np.random.randn(N, D)
 y = np.random.randint(C, size=N)
@@ -182,4 +182,53 @@ for reg in [0.0, 0.7]:
   for name in sorted(grads):
     f = lambda _: model.loss(X, y)[0]
     grad_num = eval_numerical_gradient(f, model.params[name], verbose=False)
-    print('%s relative error: %.2e' % (name, rel_error(grad_num, grads[name])))
+    print('%s relative error: %.2e' % (name, rel_error(grad_num, grads[name]))) """
+
+
+""" N, D, H1, H2, C = 2, 15, 20, 30, 10
+X = np.random.randn(N, D)
+y = np.random.randint(C, size=(N,))
+
+for reg in [0,3.14]:
+  print('Running check with reg = ', reg)
+  model = FullyConnectedNet([H1, H2], input_dim=D, num_classes=C,
+                            reg=reg, weight_scale=5e-2, dtype=np.float64)
+
+  loss, grads = model.loss(X, y)
+  print('Initial loss: ', loss)
+  
+  # Most of the errors should be on the order of e-7 or smaller.   
+  # NOTE: It is fine however to see an error for W2 on the order of e-5
+  # for the check when reg = 0.0
+  for name in sorted(grads):
+    f = lambda _: model.loss(X, y)[0]
+    grad_num = eval_numerical_gradient(f, model.params[name], verbose=False, h=1e-5)
+    print('%s relative error: %.2e' % (name, rel_error(grad_num, grads[name]))) """
+
+    
+num_train = 50
+small_data = {
+  'X_train': data['X_train'][:num_train],
+  'y_train': data['y_train'][:num_train],
+  'X_val': data['X_val'],
+  'y_val': data['y_val'],
+}
+
+weight_scale = 1e-2   # Experiment with this!
+learning_rate = 8e-3  # Experiment with this!
+model = FullyConnectedNet([100, 100],
+              weight_scale=weight_scale, dtype=np.float64)
+solver = Solver(model, small_data,
+                print_every=10, num_epochs=20, batch_size=25,
+                update_rule='sgd',
+                optim_config={
+                  'learning_rate': learning_rate,
+                }
+         )
+solver.train()
+
+plt.plot(solver.loss_history, 'o')
+plt.title('Training loss history')
+plt.xlabel('Iteration')
+plt.ylabel('Training loss')
+plt.show()
