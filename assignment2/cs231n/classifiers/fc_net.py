@@ -263,6 +263,7 @@ class FullyConnectedNet(object):
         #w1,b1 = self.params["W1"],self.params["b1"]
         #hidden_layer = {}
         cache = {}
+        dpcache = {}
         hidden_layer = X
         for i in range(self.num_layers-1):
           w,b = self.params["W"+str(i+1)],self.params["b"+str(i+1)]
@@ -270,6 +271,8 @@ class FullyConnectedNet(object):
             hidden_layer,cache[i] = affine_bn_relu_forward(hidden_layer,w,b,self.params["gamma"+str(i+1)],self.params["beta"+str(i+1)],self.bn_params[i])
           else:
             hidden_layer,cache[i] = affine_relu_forward(hidden_layer,w,b)
+          if self.use_dropout:
+            hidden_layer, dpcache[i] = dropout_forward(hidden_layer,self.dropout_param)
         w_last,b_last = self.params["W"+str(self.num_layers)],self.params["b"+str(self.num_layers)]
         scores,cache[self.num_layers-1] = affine_forward(hidden_layer,w_last,b_last) 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -299,14 +302,29 @@ class FullyConnectedNet(object):
 
         loss,dout =  softmax_loss(scores,y)
         d_hidden = {}
-        for i in range(self.num_layers,0,-1):
+        """ for i in range(self.num_layers,0,-1):
           if i == self.num_layers:
             d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)] = affine_backward(dout,cache[i-1])
           else:
+            if self.use_dropout:
+              d_hidden[i-1] = dropout_backward(d_hidden[i],dpcache[i-1])
             if self.normalization=='batchnorm':
               d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)],grads["gamma"+str(i)],grads["beta"+str(i)] = affine_bn_relu_backward(d_hidden[i],cache[i-1])
             else: 
               d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)] = affine_relu_backward(d_hidden[i],cache[i-1])
+          loss += 0.5*self.reg*np.sum(self.params["W"+str(i)]*self.params["W"+str(i)])
+          grads["W"+str(i)] += self.reg*self.params["W"+str(i)] """
+
+        for i in range(self.num_layers,0,-1):
+          if i == self.num_layers:
+            d_hidden,grads["W"+str(i)],grads["b"+str(i)] = affine_backward(dout,cache[i-1])
+          else:
+            if self.use_dropout:
+              d_hidden = dropout_backward(d_hidden,dpcache[i-1])
+            if self.normalization=='batchnorm':
+              d_hidden,grads["W"+str(i)],grads["b"+str(i)],grads["gamma"+str(i)],grads["beta"+str(i)] = affine_bn_relu_backward(d_hidden,cache[i-1])
+            else: 
+              d_hidden,grads["W"+str(i)],grads["b"+str(i)] = affine_relu_backward(d_hidden,cache[i-1])
           loss += 0.5*self.reg*np.sum(self.params["W"+str(i)]*self.params["W"+str(i)])
           grads["W"+str(i)] += self.reg*self.params["W"+str(i)]
 
