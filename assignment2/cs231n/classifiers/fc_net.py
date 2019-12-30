@@ -189,7 +189,13 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self.params["W1"] = np.random.randn(input_dim,hidden_dims[0])*weight_scale
         self.params["b1"] = np.zeros(hidden_dims[0])
+        if self.normalization == "batchnorm":
+          self.params["gamma1"] = np.ones((hidden_dims[0]))
+          self.params["beta1"] = np.zeros((hidden_dims[0]))
         for i in range(1,self.num_layers-1): #1 w2
+          if self.normalization == "batchnorm":
+            self.params["gamma"+str(i+1)] = np.ones((hidden_dims[i]))
+            self.params["beta"+str(i+1)] = np.zeros((hidden_dims[i]))
           self.params["W"+str(i+1)] = np.random.randn(hidden_dims[i-1],hidden_dims[i])*weight_scale
           self.params["b"+str(i+1)] = np.zeros(hidden_dims[i])
         self.params["W"+str(self.num_layers)] = np.random.randn(hidden_dims[-1],num_classes)*weight_scale
@@ -260,7 +266,10 @@ class FullyConnectedNet(object):
         hidden_layer = X
         for i in range(self.num_layers-1):
           w,b = self.params["W"+str(i+1)],self.params["b"+str(i+1)]
-          hidden_layer,cache[i] = affine_relu_forward(hidden_layer,w,b)
+          if self.normalization=='batchnorm':
+            hidden_layer,cache[i] = affine_bn_relu_forward(hidden_layer,w,b,self.params["gamma"+str(i+1)],self.params["beta"+str(i+1)],self.bn_params[i])
+          else:
+            hidden_layer,cache[i] = affine_relu_forward(hidden_layer,w,b)
         w_last,b_last = self.params["W"+str(self.num_layers)],self.params["b"+str(self.num_layers)]
         scores,cache[self.num_layers-1] = affine_forward(hidden_layer,w_last,b_last) 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -294,7 +303,10 @@ class FullyConnectedNet(object):
           if i == self.num_layers:
             d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)] = affine_backward(dout,cache[i-1])
           else:
-            d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)] = affine_relu_backward(d_hidden[i],cache[i-1])
+            if self.normalization=='batchnorm':
+              d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)],grads["gamma"+str(i)],grads["beta"+str(i)] = affine_bn_relu_backward(d_hidden[i],cache[i-1])
+            else: 
+              d_hidden[i-1],grads["W"+str(i)],grads["b"+str(i)] = affine_relu_backward(d_hidden[i],cache[i-1])
           loss += 0.5*self.reg*np.sum(self.params["W"+str(i)]*self.params["W"+str(i)])
           grads["W"+str(i)] += self.reg*self.params["W"+str(i)]
 
