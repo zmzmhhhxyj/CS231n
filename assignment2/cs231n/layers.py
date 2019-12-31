@@ -601,8 +601,31 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x,w,b,conv_param = cache
+    N,C,H,W = x.shape
+    F,_,HH,WW = w.shape
+    stride, pad = conv_param["stride"],conv_param["pad"]
 
-    pass
+    output_height = int((H+2*pad-HH)/stride+1)
+    output_width = int((W+2*pad-WW)/stride+1)
+    pad_size = ((0,0),(0,0),(pad,pad),(pad,pad))
+    padded_x = np.pad(x,pad_size,mode="constant",constant_values = 0)
+
+    dx_pad = np.zeros_like(padded_x)
+    dw = np.zeros_like(w)
+    db = np.zeros_like(b)
+
+    for i in range(output_height):
+      for j in range(output_width):
+        mask = padded_x[:,:,i*stride:i*stride+HH,j*stride:j*stride+WW]
+        for n in range(N):
+          for f in range(F):
+            dw[f] += dout[n,f,i,j]*mask[n]
+            dx_pad[n,:,i*stride:i*stride+HH,j*stride:j*stride+WW] += dout[n,f,i,j]*w[f]
+
+    db = np.sum(dout,axis=(0,2,3))
+    dx = dx_pad[:,:,pad:-pad,pad:-pad]
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
