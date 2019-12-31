@@ -658,8 +658,22 @@ def max_pool_forward_naive(x, pool_param):
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N,C,H,W = x.shape
+    pool_height = pool_param["pool_height"]
+    pool_width = pool_param["pool_width"]
+    stride = pool_param["stride"]
 
-    pass
+    out_H = int(1+(H-pool_height)/stride)
+    out_W = int(1+(W-pool_width)/stride)
+
+    out = np.zeros([N,C,out_H,out_W])
+
+    #for n in range(N):
+    for h in range(out_H):
+      for w in range(out_W):
+        for n in range(N):
+          out[n,:,h,w]=np.max(x[n, :, h*stride:h*stride+pool_height, w*stride:w*stride+pool_width],axis=(1,2))
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -685,9 +699,27 @@ def max_pool_backward_naive(dout, cache):
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x,pool_param = cache
+    N,C,H,W = x.shape
+    pool_height = pool_param["pool_height"]
+    pool_width = pool_param["pool_width"]
+    stride = pool_param["stride"]
 
-    pass
+    out_H = int(1+(H-pool_height)/stride)
+    out_W = int(1+(W-pool_width)/stride)
+    dx = np.zeros_like(x)
 
+    #for n in range(N):
+    for h in range(out_H):
+      for w in range(out_W):
+        for n in range(N):
+          for c in range(C):
+            flag = np.zeros([pool_height,pool_width])
+            window = x[n,c,h*stride:h*stride+pool_height, w*stride:w*stride+pool_width]
+            max_index = np.argmax(window)
+            flag[int(max_index/pool_width),int(max_index%pool_width)]=1
+            dx[n,c,h*stride:h*stride+pool_height, w*stride:w*stride+pool_width] = flag*dout[n,c,h,w]
+            
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -728,7 +760,11 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, C, H, W = x.shape
+    x = np.transpose(x,(0,2,3,1)).reshape(N*H*W,C)
+    out,cache = batchnorm_forward(x,gamma,beta,bn_param)
+    out = out.reshape(N,H,W,C).transpose(0,3,1,2)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -762,7 +798,10 @@ def spatial_batchnorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, C, H, W = dout.shape
+    dout = np.transpose(dout,(0,2,3,1)).reshape(N*H*W,C)
+    dx,dgamma,dbeta = batchnorm_backward(dout,cache)
+    dx = dx.reshape(N,H,W,C).transpose(0,3,1,2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
